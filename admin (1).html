@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base Adventistas — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e1a; --bg2: #0f1425; --bg3: #141930; --bg4: #1a2040;
+  --gold: #e8b84b; --gold2: #c9952a; --gold3: #f5d080;
+  --text: #e8eaf0; --muted: #6b7a99; --muted2: #4a5470;
+  --border: #1e2540; --border2: #252d4a;
+  --green: #4ade80; --red: #f87171; --blue: #60a5fa; --purple: #a78bfa;
+  --success-bg: #0a2015; --error-bg: #200a0a;
+  --radius: 10px; --radius-lg: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; font-size:14px; }
+
+/* SIDEBAR */
+.sidebar {
+  width:220px; min-height:100vh; background:var(--bg2);
+  border-right:1px solid var(--border); display:flex; flex-direction:column;
+  position:fixed; top:0; left:0; bottom:0; z-index:100;
+}
+.sidebar-logo {
+  padding:20px 18px 16px; border-bottom:1px solid var(--border);
+}
+.sidebar-logo .logo-name { font-size:15px; font-weight:700; color:var(--gold); letter-spacing:0.3px; }
+.sidebar-logo .logo-sub { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:2px; font-family:'JetBrains Mono',monospace; }
+.sidebar-status { display:flex; align-items:center; gap:6px; margin-top:8px; }
+.status-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.status-text { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+
+.nav-section { padding:12px 12px 4px; font-size:9px; font-weight:600; color:var(--muted2); letter-spacing:2px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:9px 18px;
+  cursor:pointer; transition:all 0.15s; font-size:13px; color:var(--muted);
+  border-left:2px solid transparent; margin:1px 0; border-radius:0 6px 6px 0;
+  margin-right:8px;
+}
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { color:var(--gold); border-left-color:var(--gold); background:#c9952a0d; }
+.nav-item .ni { font-size:15px; width:20px; text-align:center; opacity:0.8; }
+.nav-badge { margin-left:auto; background:var(--red); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px; }
+
+.sidebar-footer { margin-top:auto; padding:16px 18px; border-top:1px solid var(--border); }
+.sidebar-footer .user-email { font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; word-break:break-all; }
+.sidebar-footer .user-role { font-size:10px; color:var(--gold2); margin-top:2px; }
+
+/* MAIN */
+.main { margin-left:220px; flex:1; min-height:100vh; }
+.topbar {
+  height:52px; background:var(--bg2); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 28px;
+  position:sticky; top:0; z-index:50;
+}
+.topbar-left { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+.topbar-sep { color:var(--border2); }
+.topbar-page { color:var(--text); font-weight:500; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.topbar-time { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); }
+.topbar-btn { background:var(--bg3); border:1px solid var(--border2); color:var(--muted); padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-family:'Inter',sans-serif; transition:all 0.15s; }
+.topbar-btn:hover { border-color:var(--gold2); color:var(--gold); }
+
+.content { padding:28px; }
+
+/* PAGES */
+.page { display:none; }
+.page.active { display:block; animation:fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* PAGE HEADER */
+.page-header { margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; }
+.page-header h2 { font-size:22px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.page-header p { font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+.header-actions { display:flex; gap:8px; }
+
+/* STATS */
+.stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:24px; }
+.stat-card {
+  background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:16px 18px; cursor:default; transition:border-color 0.2s;
+}
+.stat-card:hover { border-color:var(--border2); }
+.stat-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.stat-icon { font-size:18px; opacity:0.8; }
+.stat-trend { font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--green); }
+.stat-num { font-size:28px; font-weight:700; color:var(--gold); font-family:'JetBrains Mono',monospace; margin-bottom:2px; }
+.stat-label { font-size:11px; color:var(--muted); }
+
+/* CARDS */
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:20px; overflow:hidden; }
+.card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.card-title { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
+.card-title .ct-badge { font-size:10px; font-family:'JetBrains Mono',monospace; background:var(--bg3); color:var(--muted); padding:2px 8px; border-radius:4px; border:1px solid var(--border2); }
+.card-body { padding:20px; }
+
+/* FORM */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group.full { grid-column:1/-1; }
+.form-group.third { grid-column:span 1; }
+label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+input, textarea, select {
+  background:var(--bg3); border:1px solid var(--border2); border-radius:8px;
+  padding:10px 12px; color:var(--text); font-family:'Inter',sans-serif; font-size:13px;
+  transition:border-color 0.15s; outline:none; width:100%;
+}
+input:focus, textarea:focus, select:focus { border-color:var(--gold2); background:var(--bg4); }
+input::placeholder, textarea::placeholder { color:var(--muted2); }
+textarea { resize:vertical; min-height:100px; }
+select option { background:var(--bg2); }
+
+.form-actions { display:flex; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+
+/* BUTTONS */
+.btn { padding:9px 18px; border-radius:8px; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; transition:all 0.15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-primary { background:var(--gold); color:#0a0e1a; }
+.btn-primary:hover { background:var(--gold3); transform:translateY(-1px); }
+.btn-secondary { background:var(--bg3); color:var(--text); border:1px solid var(--border2); }
+.btn-secondary:hover { border-color:var(--gold2); color:var(--gold); }
+.btn-danger { background:var(--error-bg); color:var(--red); border:1px solid #f8717122; font-size:11px; padding:6px 12px; }
+.btn-danger:hover { background:#2a0a0a; }
+.btn-warning { background:#1a1200; color:#fbbf24; border:1px solid #fbbf2422; font-size:11px; padding:6px 12px; }
+.btn-warning:hover { background:#251a00; }
+.btn-green { background:var(--success-bg); color:var(--green); border:1px solid #4ade8022; font-size:11px; padding:6px 12px; }
+.btn-blue { background:#0a1525; color:var(--blue); border:1px solid #60a5fa22; font-size:11px; padding:6px 12px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+/* TABLE */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; padding:10px 16px; font-size:10px; font-weight:600; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; background:var(--bg3); border-bottom:1px solid var(--border); font-family:'JetBrains Mono',monospace; }
+td { padding:12px 16px; font-size:12px; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#ffffff03; }
+.truncate { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mono { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); }
+
+/* TAGS */
+.tag { display:inline-block; font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.5px; font-family:'JetBrains Mono',monospace; }
+.tag-gold { background:#c9952a15; color:var(--gold); border:1px solid #c9952a33; }
+.tag-green { background:#0a2015; color:var(--green); border:1px solid #4ade8033; }
+.tag-blue { background:#0a1525; color:var(--blue); border:1px solid #60a5fa33; }
+.tag-red { background:#200a0a; color:var(--red); border:1px solid #f8717133; }
+.tag-purple { background:#150a25; color:var(--purple); border:1px solid #a78bfa33; }
+
+/* USER CARD */
+.user-row { display:flex; align-items:center; gap:12px; }
+.user-avatar { width:32px; height:32px; border-radius:50%; background:var(--bg4); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.user-name { font-size:12px; font-weight:600; color:var(--text); }
+.user-email-td { font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+
+/* NOTIF TEST */
+.notif-preview { background:var(--bg3); border:1px solid var(--border2); border-radius:10px; padding:14px 16px; margin-bottom:14px; border-left:3px solid var(--gold2); }
+.notif-preview-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+.notif-preview-body { font-size:12px; color:var(--muted); }
+
+/* SCHEDULE */
+.schedule-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+.schedule-item:last-child { border-bottom:none; }
+.schedule-time { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gold); min-width:80px; }
+.schedule-info { flex:1; }
+.schedule-title { font-size:12px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.schedule-meta { font-size:11px; color:var(--muted); }
+.schedule-status { flex-shrink:0; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:24px; right:24px;
+  background:var(--bg2); border:1px solid var(--border2); border-radius:10px;
+  padding:12px 18px; font-size:13px; color:var(--text);
+  transform:translateY(80px); opacity:0; transition:all 0.25s; z-index:999;
+  display:flex; align-items:center; gap:8px; min-width:260px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* MISC */
+.empty { text-align:center; padding:40px; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; }
+.loading { text-align:center; padding:30px; color:var(--muted2); font-size:12px; }
+.divider { height:1px; background:var(--border); margin:16px 0; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+.inline-actions { display:flex; gap:6px; }
+
+/* VERSICULOS */
+.ver-card { background:var(--bg3); border:1px solid var(--border2); border-radius:8px; padding:14px; margin-bottom:10px; }
+.ver-texto { font-size:13px; color:var(--text); font-style:italic; line-height:1.6; margin-bottom:6px; }
+.ver-ref { font-size:11px; color:var(--gold); font-family:'JetBrains Mono',monospace; font-weight:600; }
+
+/* AGENDAMENTO */
+.agenda-row { display:flex; gap:10px; align-items:flex-end; }
+.agenda-row .form-group { flex:1; }
+
+.scrollable { max-height:360px; overflow-y:auto; }
+.scrollable::-webkit-scrollbar { width:4px; }
+.scrollable::-webkit-scrollbar-track { background:transparent; }
+.scrollable::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-name">Base Adventistas</div>
+    <div class="logo-sub">Admin Panel</div>
+    <div class="sidebar-status">
+      <div class="status-dot"></div>
+      <div class="status-text" id="conn-status">connecting...</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Principal</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="ni">⬛</span> Dashboard</div>
+  <div class="nav-item" onclick="showPage('versiculos',this)"><span class="ni">📖</span> Versículos</div>
+  <div class="nav-item" onclick="showPage('devocionais',this)"><span class="ni">✍️</span> Devocionais</div>
+  <div class="nav-item" onclick="showPage('eventos',this)"><span class="ni">📅</span> Eventos</div>
+  <div class="nav-item" onclick="showPage('noticias',this)"><span class="ni">📰</span> Notícias</div>
+
+  <div class="nav-section">Comunidade</div>
+  <div class="nav-item" onclick="showPage('oracao',this)"><span class="ni">🙏</span> Oração <span class="nav-badge" id="badge-oracao">0</span></div>
+  <div class="nav-item" onclick="showPage('galeria',this)"><span class="ni">📸</span> Galeria</div>
+
+  <div class="nav-section">Sistema</div>
+  <div class="nav-item" onclick="showPage('usuarios',this)"><span class="ni">👥</span> Usuários</div>
+  <div class="nav-item" onclick="showPage('notificacoes',this)"><span class="ni">🔔</span> Notificações</div>
+  <div class="nav-item" onclick="showPage('agendamento',this)"><span class="ni">⏰</span> Agendamento</div>
+
+  <div class="sidebar-footer">
+    <div class="user-email" id="sidebar-email">—</div>
+    <div class="user-role">Super Admin</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span>base-adventistas</span>
+      <span class="topbar-sep">/</span>
+      <span class="topbar-page" id="topbar-page">dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="topbar-time"></div>
+      <button class="topbar-btn" onclick="refreshPage()">↻ Refresh</button>
+      <button class="topbar-btn" onclick="signOut()" style="color:var(--red)">Sair</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- LOGIN -->
+    <div class="page active" id="page-login">
+      <div style="max-width:400px;margin:80px auto;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔐 Autenticação Admin</div></div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Email</label>
+              <input type="email" id="login-email" placeholder="admin@email.com">
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label>Senha</label>
+              <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="fazerLogin()">Entrar no Painel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <div><h2>Dashboard</h2><p>// visão geral · campo misionario cariamanga</p></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">👥</span><span class="stat-trend" id="trend-users">—</span></div>
+          <div class="stat-num" id="stat-users">—</div><div class="stat-label">Usuários</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">📖</span><span class="stat-trend">—</span></div>
+          <div class="stat-num" id="stat-devocionais">—</div><div class="stat-label">Devocionais</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">📅</span><span class="stat-trend">—</span></div>
+          <div class="stat-num" id="stat-eventos">—</div><div class="stat-label">Eventos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">🙏</span><span class="stat-trend">—</span></div>
+          <div class="stat-num" id="stat-oracao">—</div><div class="stat-label">Pedidos Oração</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">📸</span><span class="stat-trend">—</span></div>
+          <div class="stat-num" id="stat-galeria">—</div><div class="stat-label">Fotos</div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🙏 Últimos Pedidos <span class="ct-badge">recentes</span></div></div>
+          <div class="table-wrap scrollable">
+            <table><thead><tr><th>Nome</th><th>Pedido</th><th>Amens</th></tr></thead>
+            <tbody id="dash-oracao"><tr><td colspan="3" class="loading">Carregando...</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">👥 Últimos Usuários <span class="ct-badge">recentes</span></div></div>
+          <div class="table-wrap scrollable">
+            <table><thead><tr><th>Email</th><th>Cadastro</th></tr></thead>
+            <tbody id="dash-users"><tr><td colspan="2" class="loading">Carregando...</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERSÍCULOS -->
+    <div class="page" id="page-versiculos">
+      <div class="page-header"><div><h2>Versículos</h2><p>// banco de versículos diários</p></div></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">➕ Novo Versículo</div></div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Texto do versículo</label>
+              <textarea id="ver-texto" placeholder="Porque soy el Señor tu Dios..."></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label>Referência</label>
+              <input type="text" id="ver-ref" placeholder="Ex: Isaías 41:13">
+            </div>
+            <div class="form-actions" style="margin-top:0;padding-top:0;border-top:none;">
+              <button class="btn btn-primary" onclick="salvarVersiculo()">💾 Salvar Versículo</button>
+              <button class="btn btn-secondary" onclick="limpar('ver-texto','ver-ref')">Limpar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📖 Versículos Cadastrados <span class="ct-badge" id="count-ver">0</span></div></div>
+          <div class="scrollable" style="max-height:320px;">
+            <div id="lista-versiculos" style="padding:14px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVOCIONAIS -->
+    <div class="page" id="page-devocionais">
+      <div class="page-header"><div><h2>Devocionais</h2><p>// publicações espirituais diárias</p></div></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">✍️ Novo Devocional</div></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Título</label><input type="text" id="dev-titulo" placeholder="Ex: La fe que mueve montañas"></div>
+            <div class="form-group"><label>Versículo de referência</label><input type="text" id="dev-versiculo" placeholder="Ex: Mateus 17:20"></div>
+            <div class="form-group"><label>Data</label><input type="date" id="dev-data"></div>
+            <div class="form-group"><label>Tag</label>
+              <select id="dev-tag"><option value="">Sem tag</option><option value="NOVO">NOVO</option><option value="ESPECIAL">ESPECIAL</option><option value="SEMANA SANTA">SEMANA SANTA</option></select>
+            </div>
+            <div class="form-group full"><label>Resumo (aparece no card)</label><input type="text" id="dev-resumo" placeholder="Resumo curto..."></div>
+            <div class="form-group full"><label>Conteúdo completo</label><textarea id="dev-conteudo" placeholder="Escreva o devocional completo..." style="min-height:140px;"></textarea></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="salvarDevocional()">📖 Publicar</button>
+            <button class="btn btn-secondary" onclick="limpar('dev-titulo','dev-versiculo','dev-resumo','dev-conteudo')">Limpar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Publicados <span class="ct-badge" id="count-dev">0</span></div></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Título</th><th>Versículo</th><th>Data</th><th>Tag</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-devocionais"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTOS -->
+    <div class="page" id="page-eventos">
+      <div class="page-header"><div><h2>Eventos</h2><p>// agenda do campo</p></div></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📅 Novo Evento</div></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Título</label><input type="text" id="ev-titulo" placeholder="Ex: Culto de Sábado"></div>
+            <div class="form-group"><label>Local</label><input type="text" id="ev-local" placeholder="Ex: Igreja Central"></div>
+            <div class="form-group"><label>Dia</label><input type="text" id="ev-dia" placeholder="Ex: 22"></div>
+            <div class="form-group"><label>Mês</label><input type="text" id="ev-mes" placeholder="Ex: MAR"></div>
+            <div class="form-group"><label>Hora</label><input type="text" id="ev-hora" placeholder="Ex: 9:30 AM"></div>
+            <div class="form-group"><label>Tipo</label>
+              <select id="ev-tipo"><option value="CULTO">CULTO</option><option value="JOVENS">JOVENS</option><option value="MISSAO">MISSAO</option><option value="ESPECIAL">ESPECIAL</option></select>
+            </div>
+            <div class="form-group"><label>Cor</label>
+              <select id="ev-cor"><option value="green">Verde (Culto)</option><option value="gold">Dourado (Jovens)</option><option value="blue">Azul (Missão)</option></select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="salvarEvento()">📅 Adicionar</button>
+            <button class="btn btn-secondary" onclick="limpar('ev-titulo','ev-local','ev-dia','ev-mes','ev-hora')">Limpar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Eventos <span class="ct-badge" id="count-ev">0</span></div></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Data</th><th>Título</th><th>Hora</th><th>Local</th><th>Tipo</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-eventos"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTICIAS -->
+    <div class="page" id="page-noticias">
+      <div class="page-header"><div><h2>Notícias do Campo</h2><p>// campo misionario · cariamanga</p></div></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📰 Nova Notícia</div></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Título</label><input type="text" id="not-titulo" placeholder="Ex: Batismos na região norte"></div>
+            <div class="form-group"><label>Data</label><input type="text" id="not-data" placeholder="Ex: 20 mar 2026"></div>
+            <div class="form-group full"><label>Resumo</label><input type="text" id="not-resumo" placeholder="Resumo curto..."></div>
+            <div class="form-group full"><label>Conteúdo completo</label><textarea id="not-conteudo" placeholder="Escreva a notícia..."></textarea></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="salvarNoticia()">📰 Publicar</button>
+            <button class="btn btn-secondary" onclick="limpar('not-titulo','not-data','not-resumo','not-conteudo')">Limpar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Publicadas <span class="ct-badge" id="count-not">0</span></div></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Título</th><th>Resumo</th><th>Data</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-noticias"><tr><td colspan="4" class="loading">Carregando...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORAÇÃO -->
+    <div class="page" id="page-oracao">
+      <div class="page-header"><div><h2>Pedidos de Oração</h2><p>// mural da comunidade</p></div></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🙏 Todos os Pedidos <span class="ct-badge" id="count-or">0</span></div></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Nome</th><th>Pedido</th><th>Amens</th><th>Data</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-oracao"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GALERIA -->
+    <div class="page" id="page-galeria">
+      <div class="page-header"><div><h2>Galeria</h2><p>// fotos do campo missionário</p></div></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📸 Fotos <span class="ct-badge" id="count-gal">0</span></div></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Foto</th><th>Título</th><th>Autor</th><th>Curtidas</th><th>Data</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-galeria"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="page" id="page-usuarios">
+      <div class="page-header">
+        <div><h2>Usuários</h2><p>// gerenciamento de contas</p></div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="loadUsuarios()">↻ Atualizar</button>
+        </div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">👥</span></div>
+          <div class="stat-num" id="stat-total-users">—</div><div class="stat-label">Total de usuários</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">✅</span></div>
+          <div class="stat-num" id="stat-confirmed">—</div><div class="stat-label">Confirmados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-icon">⏳</span></div>
+          <div class="stat-num" id="stat-pending">—</div><div class="stat-label">Sem perfil</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">👥 Lista de Usuários</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuário</th><th>Email</th><th>Perfil</th><th>Igreja</th><th>Cadastro</th><th>Ações</th></tr></thead>
+            <tbody id="tabela-usuarios"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔑 Reset de Senha Manual</div></div>
+        <div class="card-body">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Envie um link de recuperação de senha para qualquer usuário cadastrado.</p>
+          <div class="form-grid" style="grid-template-columns:1fr auto;">
+            <div class="form-group">
+              <label>Email do usuário</label>
+              <input type="email" id="reset-email" placeholder="email@exemplo.com">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+              <label style="opacity:0;">.</label>
+              <button class="btn btn-warning" onclick="resetSenha()">📧 Enviar Link de Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div class="page" id="page-notificacoes">
+      <div class="page-header"><div><h2>Notificações Push</h2><p>// sistema de notificações · expo push api</p></div></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔔 Enviar Notificação</div></div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Título</label>
+              <input type="text" id="notif-titulo" placeholder="Ex: Base Adventistas · Versículo do dia" oninput="atualizarPreview()">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Mensagem</label>
+              <textarea id="notif-corpo" placeholder="Ex: Isaías 41:13 — Não temas, Eu te ajudarei..." style="min-height:80px;" oninput="atualizarPreview()"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label>Enviar para</label>
+              <select id="notif-alvo">
+                <option value="todos">Todos os usuários</option>
+                <option value="test">Teste (apenas eu)</option>
+              </select>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;">
+              ⚠️ Notificações remotas funcionam apenas no APK, não no Expo Go.
+            </p>
+            <div class="form-actions" style="margin-top:0;padding-top:0;border-top:none;">
+              <button class="btn btn-primary" onclick="enviarNotificacao()">🚀 Enviar Agora</button>
+              <button class="btn btn-secondary" onclick="testarNotificacao()">🧪 Testar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">👁️ Preview</div></div>
+          <div class="card-body">
+            <div style="background:#1a1a2e;border-radius:12px;padding:16px;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="width:28px;height:28px;background:#162338;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">✝️</div>
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:#fff;">Base Adventistas</div>
+                  <div style="font-size:10px;color:#888;">agora</div>
+                </div>
+              </div>
+              <div id="preview-titulo" style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Título da notificação</div>
+              <div id="preview-corpo" style="font-size:12px;color:#aaa;line-height:1.4;">Corpo da mensagem aparece aqui...</div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);">
+              <div style="margin-bottom:6px;">📱 <strong style="color:var(--text);">Tokens ativos:</strong> <span id="count-tokens" style="font-family:'JetBrains Mono',monospace;">—</span></div>
+              <div>📊 <strong style="color:var(--text);">Usuários com perfil:</strong> <span id="count-perfis" style="font-family:'JetBrains Mono',monospace;">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Histórico de Notificações</div></div>
+        <div id="notif-historico" style="padding:20px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+          Nenhuma notificação enviada ainda nesta sessão.
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENDAMENTO -->
+    <div class="page" id="page-agendamento">
+      <div class="page-header"><div><h2>Agendamento</h2><p>// publicações automáticas programadas</p></div></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">⏰ Agendar Devocional</div></div>
+          <div class="card-body">
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Título</label>
+              <input type="text" id="ag-titulo" placeholder="Título do devocional">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Versículo</label>
+              <input type="text" id="ag-versiculo" placeholder="Ex: João 3:16">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Resumo</label>
+              <input type="text" id="ag-resumo" placeholder="Resumo curto...">
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label>Conteúdo</label>
+              <textarea id="ag-conteudo" placeholder="Conteúdo completo..." style="min-height:100px;"></textarea>
+            </div>
+            <div class="form-grid" style="margin-bottom:16px;">
+              <div class="form-group">
+                <label>Data de publicação</label>
+                <input type="date" id="ag-data">
+              </div>
+              <div class="form-group">
+                <label>Tag</label>
+                <select id="ag-tag"><option value="">Sem tag</option><option value="NOVO">NOVO</option><option value="ESPECIAL">ESPECIAL</option></select>
+              </div>
+            </div>
+            <div class="form-actions" style="margin-top:0;padding-top:0;border-top:none;">
+              <button class="btn btn-primary" onclick="agendarDevocional()">⏰ Agendar</button>
+              <button class="btn btn-secondary" onclick="limpar('ag-titulo','ag-versiculo','ag-resumo','ag-conteudo')">Limpar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Agendados <span class="ct-badge" id="count-ag">0</span></div></div>
+          <div class="scrollable">
+            <div id="lista-agendados" style="padding:14px;">
+              <div class="empty">Nenhum devocional agendado</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔄 Automações Ativas</div></div>
+        <div class="card-body">
+          <div class="schedule-item">
+            <div class="schedule-time">06:00 AM</div>
+            <div class="schedule-info">
+              <div class="schedule-title">Versículo do dia</div>
+              <div class="schedule-meta">Rotaciona automaticamente pelo banco de versículos · todos os dias</div>
+            </div>
+            <div class="schedule-status"><span class="tag tag-green">ATIVO</span></div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">Sexta 20h</div>
+            <div class="schedule-info">
+              <div class="schedule-title">Lembrete de culto</div>
+              <div class="schedule-meta">Notifica os irmãos sobre o culto de sábado</div>
+            </div>
+            <div class="schedule-status"><span class="tag tag-green">ATIVO</span></div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">Manual</div>
+            <div class="schedule-info">
+              <div class="schedule-title">Devocionais agendados</div>
+              <div class="schedule-meta">Publicação automática na data configurada</div>
+            </div>
+            <div class="schedule-status"><span class="tag tag-blue">MANUAL</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const { createClient } = supabase;
+const SUPA_URL = 'https://ocwlskagbiabfcooveck.supabase.co';
+const SUPA_KEY = 'sb_publishable_R8LYaZFx7v6Iodw7TE5P_A_EjdgjGKG';
+const db = createClient(SUPA_URL, SUPA_KEY);
+
+let currentPage = 'login';
+let notifHistory = [];
+
+// CLOCK
+setInterval(function() {
+  const now = new Date();
+  const el = document.getElementById('topbar-time');
+  if (el) el.textContent = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}, 1000);
+
+// AUTH
+async function init() {
+  const { data } = await db.auth.getSession();
+  if (data.session) {
+    document.getElementById('sidebar-email').textContent = data.session.user.email;
+    document.getElementById('conn-status').textContent = 'connected';
+    showPage('dashboard', document.querySelector('.nav-item'));
+    loadBadges();
+  } else {
+    showPage('login', null);
+    document.getElementById('conn-status').textContent = 'not authenticated';
+  }
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if (!email || !senha) { toast('Preencha email e senha!', true); return; }
+  const { data, error } = await db.auth.signInWithPassword({ email, password: senha });
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  document.getElementById('sidebar-email').textContent = email;
+  document.getElementById('conn-status').textContent = 'connected';
+  toast('Login realizado!');
+  showPage('dashboard', document.querySelector('.nav-item'));
+  loadBadges();
+}
+
+async function signOut() {
+  await db.auth.signOut();
+  showPage('login', null);
+  document.getElementById('conn-status').textContent = 'disconnected';
+  toast('Sessão encerrada');
+}
+
+// NAV
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-page').textContent = name;
+  currentPage = name;
+  const loaders = {
+    dashboard: loadDashboard,
+    versiculos: loadVersiculos,
+    devocionais: loadDevocionais,
+    eventos: loadEventos,
+    noticias: loadNoticias,
+    oracao: loadOracao,
+    galeria: loadGaleria,
+    usuarios: loadUsuarios,
+    notificacoes: loadNotificacoes,
+    agendamento: loadAgendamento,
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+function refreshPage() { showPage(currentPage, document.querySelector('.nav-item.active')); }
+
+// TOAST
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.innerHTML = (err ? '❌' : '✅') + ' <span>' + msg + '</span>';
+  t.style.borderColor = err ? 'var(--red)' : 'var(--gold2)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function limpar(...ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); }
+function fmt(d) { return d ? new Date(d).toLocaleDateString('pt-BR') : '—'; }
+function fmtTime(d) { return d ? new Date(d).toLocaleString('pt-BR') : '—'; }
+
+// BADGES
+async function loadBadges() {
+  const { count } = await db.from('pedidos_oracao').select('*', { count:'exact', head:true });
+  const b = document.getElementById('badge-oracao');
+  if (b) b.textContent = count || 0;
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  const [a,b,c,d,e] = await Promise.all([
+    db.from('devocionais').select('*', {count:'exact',head:true}),
+    db.from('eventos').select('*', {count:'exact',head:true}),
+    db.from('pedidos_oracao').select('*', {count:'exact',head:true}),
+    db.from('galeria').select('*', {count:'exact',head:true}),
+    db.from('perfis').select('*', {count:'exact',head:true}),
+  ]);
+  document.getElementById('stat-users').textContent = e.count ?? 0;
+  document.getElementById('stat-devocionais').textContent = a.count ?? 0;
+  document.getElementById('stat-eventos').textContent = b.count ?? 0;
+  document.getElementById('stat-oracao').textContent = c.count ?? 0;
+  document.getElementById('stat-galeria').textContent = d.count ?? 0;
+  document.getElementById('trend-users').textContent = (e.count ?? 0) + ' perfis';
+
+  const { data: or } = await db.from('pedidos_oracao').select('*').order('created_at',{ascending:false}).limit(5);
+  document.getElementById('dash-oracao').innerHTML = or && or.length
+    ? or.map(p => `<tr><td><strong>${p.nome}</strong></td><td class="truncate">${p.pedido}</td><td>🙏 ${p.amens}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty">Nenhum pedido</td></tr>';
+
+  const { data: perf } = await db.from('perfis').select('nome,created_at').order('created_at',{ascending:false}).limit(5);
+  document.getElementById('dash-users').innerHTML = perf && perf.length
+    ? perf.map(u => `<tr><td><strong>${u.nome||'—'}</strong></td><td class="mono">${fmt(u.created_at)}</td></tr>`).join('')
+    : '<tr><td colspan="2" class="empty">Nenhum perfil</td></tr>';
+}
+
+// VERSÍCULOS
+async function loadVersiculos() {
+  const { data } = await db.from('versiculos').select('*').order('created_at',{ascending:false});
+  const lista = document.getElementById('lista-versiculos');
+  document.getElementById('count-ver').textContent = data ? data.length : 0;
+  if (!data || !data.length) { lista.innerHTML = '<div class="empty">Nenhum versículo cadastrado</div>'; return; }
+  lista.innerHTML = data.map(v => `
+    <div class="ver-card">
+      <div class="ver-texto">"${v.texto}"</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="ver-ref">— ${v.referencia}</div>
+        <button class="btn btn-danger btn-sm" onclick="del('versiculos',${v.id},loadVersiculos)">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+async function salvarVersiculo() {
+  const texto = document.getElementById('ver-texto').value.trim();
+  const ref = document.getElementById('ver-ref').value.trim();
+  if (!texto || !ref) { toast('Preencha o texto e a referência!', true); return; }
+  const { error } = await db.from('versiculos').insert([{ texto, referencia: ref }]);
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  toast('Versículo salvo!');
+  limpar('ver-texto','ver-ref');
+  loadVersiculos();
+}
+
+// DEVOCIONAIS
+async function loadDevocionais() {
+  const { data } = await db.from('devocionais').select('*').order('created_at',{ascending:false});
+  document.getElementById('count-dev').textContent = data ? data.length : 0;
+  const tb = document.getElementById('tabela-devocionais');
+  tb.innerHTML = data && data.length ? data.map(d => `
+    <tr>
+      <td><strong>${d.titulo}</strong></td>
+      <td class="mono">${d.versiculo||'—'}</td>
+      <td class="mono">${d.data||'—'}</td>
+      <td>${d.tag ? '<span class="tag tag-gold">'+d.tag+'</span>' : '—'}</td>
+      <td><div class="inline-actions">
+        <button class="btn btn-danger btn-sm" onclick="del('devocionais',${d.id},loadDevocionais)">🗑 Apagar</button>
+      </div></td>
+    </tr>`).join('')
+    : '<tr><td colspan="5" class="empty">Nenhum devocional</td></tr>';
+}
+
+async function salvarDevocional() {
+  const titulo = document.getElementById('dev-titulo').value.trim();
+  const conteudo = document.getElementById('dev-conteudo').value.trim();
+  if (!titulo || !conteudo) { toast('Preencha o título e o conteúdo!', true); return; }
+  const d = document.getElementById('dev-data').value;
+  const dataFmt = d ? new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}) : '';
+  const { error } = await db.from('devocionais').insert([{
+    titulo, conteudo, data: dataFmt,
+    versiculo: document.getElementById('dev-versiculo').value.trim(),
+    tag: document.getElementById('dev-tag').value,
+    resumo: document.getElementById('dev-resumo').value.trim(),
+  }]);
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  toast('Devocional publicado!');
+  limpar('dev-titulo','dev-versiculo','dev-resumo','dev-conteudo');
+  document.getElementById('dev-data').value = '';
+  loadDevocionais();
+}
+
+// EVENTOS
+async function loadEventos() {
+  const { data } = await db.from('eventos').select('*').order('created_at',{ascending:false});
+  document.getElementById('count-ev').textContent = data ? data.length : 0;
+  const tb = document.getElementById('tabela-eventos');
+  tb.innerHTML = data && data.length ? data.map(e => `
+    <tr>
+      <td class="mono"><strong>${e.dia} ${e.mes}</strong></td>
+      <td>${e.titulo}</td>
+      <td class="mono">${e.hora||'—'}</td>
+      <td>${e.local||'—'}</td>
+      <td><span class="tag ${e.cor==='green'?'tag-green':e.cor==='blue'?'tag-blue':'tag-gold'}">${e.tipo}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="del('eventos',${e.id},loadEventos)">🗑 Apagar</button></td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" class="empty">Nenhum evento</td></tr>';
+}
+
+async function salvarEvento() {
+  const titulo = document.getElementById('ev-titulo').value.trim();
+  const dia = document.getElementById('ev-dia').value.trim();
+  const mes = document.getElementById('ev-mes').value.trim();
+  if (!titulo || !dia || !mes) { toast('Preencha título, dia e mês!', true); return; }
+  const { error } = await db.from('eventos').insert([{
+    titulo, dia, mes,
+    local: document.getElementById('ev-local').value.trim(),
+    hora: document.getElementById('ev-hora').value.trim(),
+    tipo: document.getElementById('ev-tipo').value,
+    cor: document.getElementById('ev-cor').value,
+  }]);
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  toast('Evento adicionado!');
+  limpar('ev-titulo','ev-local','ev-dia','ev-mes','ev-hora');
+  loadEventos();
+}
+
+// NOTICIAS
+async function loadNoticias() {
+  const { data } = await db.from('noticias_campo').select('*').order('created_at',{ascending:false});
+  document.getElementById('count-not').textContent = data ? data.length : 0;
+  const tb = document.getElementById('tabela-noticias');
+  tb.innerHTML = data && data.length ? data.map(n => `
+    <tr>
+      <td><strong>${n.titulo}</strong></td>
+      <td class="truncate">${n.resumo||'—'}</td>
+      <td class="mono">${n.data||'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="del('noticias_campo',${n.id},loadNoticias)">🗑 Apagar</button></td>
+    </tr>`).join('')
+    : '<tr><td colspan="4" class="empty">Nenhuma notícia</td></tr>';
+}
+
+async function salvarNoticia() {
+  const titulo = document.getElementById('not-titulo').value.trim();
+  const conteudo = document.getElementById('not-conteudo').value.trim();
+  if (!titulo || !conteudo) { toast('Preencha o título e o conteúdo!', true); return; }
+  const { error } = await db.from('noticias_campo').insert([{
+    titulo, conteudo, tag:'CAMPO',
+    data: document.getElementById('not-data').value.trim(),
+    resumo: document.getElementById('not-resumo').value.trim(),
+  }]);
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  toast('Notícia publicada!');
+  limpar('not-titulo','not-data','not-resumo','not-conteudo');
+  loadNoticias();
+}
+
+// ORAÇÃO
+async function loadOracao() {
+  const { data } = await db.from('pedidos_oracao').select('*').order('created_at',{ascending:false});
+  document.getElementById('count-or').textContent = data ? data.length : 0;
+  const tb = document.getElementById('tabela-oracao');
+  tb.innerHTML = data && data.length ? data.map(p => `
+    <tr>
+      <td><strong>${p.nome}</strong></td>
+      <td class="truncate">${p.pedido}</td>
+      <td>🙏 ${p.amens}</td>
+      <td class="mono">${fmt(p.created_at)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="del('pedidos_oracao',${p.id},loadOracao)">🗑 Apagar</button></td>
+    </tr>`).join('')
+    : '<tr><td colspan="5" class="empty">Nenhum pedido</td></tr>';
+}
+
+// GALERIA
+async function loadGaleria() {
+  const { data } = await db.from('galeria').select('*').order('created_at',{ascending:false});
+  document.getElementById('count-gal').textContent = data ? data.length : 0;
+  const tb = document.getElementById('tabela-galeria');
+  tb.innerHTML = data && data.length ? data.map(f => `
+    <tr>
+      <td>${f.url_imagem ? '<img src="'+f.url_imagem+'" style="width:40px;height:40px;border-radius:6px;object-fit:cover;">' : '<span style="font-size:22px;">'+f.emoji+'</span>'}</td>
+      <td><strong>${f.titulo}</strong></td>
+      <td>${f.autor||'—'}</td>
+      <td>❤️ ${f.curtidas}</td>
+      <td class="mono">${f.data||fmt(f.created_at)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="del('galeria',${f.id},loadGaleria)">🗑 Apagar</button></td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" class="empty">Nenhuma foto</td></tr>';
+}
+
+// USUÁRIOS
+async function loadUsuarios() {
+  const { data: perfis } = await db.from('perfis').select('*').order('created_at',{ascending:false});
+  const total = perfis ? perfis.length : 0;
+  const comPerfil = perfis ? perfis.filter(p => p.nome).length : 0;
+  document.getElementById('stat-total-users').textContent = total;
+  document.getElementById('stat-confirmed').textContent = comPerfil;
+  document.getElementById('stat-pending').textContent = total - comPerfil;
+  const tb = document.getElementById('tabela-usuarios');
+  if (!perfis || !perfis.length) { tb.innerHTML = '<tr><td colspan="6" class="empty">Nenhum usuário</td></tr>'; return; }
+  tb.innerHTML = perfis.map(p => `
+    <tr>
+      <td><div class="user-row"><div class="user-avatar">👤</div><div class="user-name">${p.nome||'Sem nome'}</div></div></td>
+      <td class="user-email-td">${p.user_id ? p.user_id.substring(0,8)+'...' : '—'}</td>
+      <td><span class="tag ${p.nome ? 'tag-green' : 'tag-red'}">${p.nome ? 'ATIVO' : 'SEM PERFIL'}</span></td>
+      <td>${p.igreja||'—'}</td>
+      <td class="mono">${fmt(p.created_at)}</td>
+      <td><div class="inline-actions">
+        <button class="btn btn-warning btn-sm" onclick="preencherReset('${p.nome||''}')">🔑 Reset</button>
+        <button class="btn btn-danger btn-sm" onclick="del('perfis',${p.id},loadUsuarios)">🗑</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function preencherReset(nome) {
+  const el = document.getElementById('reset-email');
+  if (el) { el.focus(); el.placeholder = 'Email de ' + nome + '...'; }
+}
+
+async function resetSenha() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) { toast('Digite o email do usuário!', true); return; }
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  toast('Link de reset enviado para ' + email + '!');
+  document.getElementById('reset-email').value = '';
+}
+
+// NOTIFICAÇÕES
+async function loadNotificacoes() {
+  const { count: tokens } = await db.from('perfis').select('push_token', {count:'exact',head:true}).not('push_token','is',null);
+  const { count: perfis } = await db.from('perfis').select('*', {count:'exact',head:true});
+  document.getElementById('count-tokens').textContent = tokens || 0;
+  document.getElementById('count-perfis').textContent = perfis || 0;
+}
+
+function atualizarPreview() {
+  const titulo = document.getElementById('notif-titulo').value || 'Título da notificação';
+  const corpo = document.getElementById('notif-corpo').value || 'Corpo da mensagem aparece aqui...';
+  document.getElementById('preview-titulo').textContent = titulo;
+  document.getElementById('preview-corpo').textContent = corpo;
+}
+
+async function enviarNotificacao() {
+  const titulo = document.getElementById('notif-titulo').value.trim();
+  const corpo = document.getElementById('notif-corpo').value.trim();
+  if (!titulo || !corpo) { toast('Preencha título e mensagem!', true); return; }
+  const { data: perfis } = await db.from('perfis').select('push_token').not('push_token','is',null);
+  if (!perfis || !perfis.length) { toast('Nenhum token push cadastrado ainda. Os tokens são registrados quando o usuário abre o APK.', true); return; }
+  const tokens = perfis.map(p => p.push_token).filter(Boolean);
+  try {
+    const res = await fetch('https://exp.host/--/api/v2/push/send', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json','Accept-Encoding':'gzip, deflate'},
+      body: JSON.stringify(tokens.map(t => ({ to:t, title:titulo, body:corpo, sound:'default', priority:'high' })))
+    });
+    const json = await res.json();
+    const ok = json.data ? json.data.filter(r => r.status === 'ok').length : 0;
+    toast('Enviado para ' + ok + '/' + tokens.length + ' dispositivos!');
+    adicionarHistorico(titulo, corpo, ok, tokens.length);
+  } catch(e) {
+    toast('Erro ao enviar: ' + e.message, true);
+  }
+}
+
+async function testarNotificacao() {
+  toast('Teste: notificações funcionam apenas no APK instalado. No Expo Go não é suportado.', true);
+}
+
+function adicionarHistorico(titulo, corpo, ok, total) {
+  notifHistory.unshift({ titulo, corpo, ok, total, time: new Date().toLocaleTimeString('pt-BR') });
+  const el = document.getElementById('notif-historico');
+  el.innerHTML = notifHistory.map(n => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);min-width:60px;">${n.time}</div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;">${n.titulo}</div>
+        <div style="font-size:11px;color:var(--muted);">${n.corpo}</div>
+        <div style="margin-top:4px;"><span class="tag tag-green">${n.ok}/${n.total} enviados</span></div>
+      </div>
+    </div>`).join('');
+}
+
+// AGENDAMENTO
+async function loadAgendamento() {
+  const hoje = new Date().toISOString().split('T')[0];
+  const { data } = await db.from('devocionais').select('*').order('created_at',{ascending:false}).limit(10);
+  const lista = document.getElementById('lista-agendados');
+  document.getElementById('count-ag').textContent = data ? data.length : 0;
+  if (!data || !data.length) { lista.innerHTML = '<div class="empty">Nenhum agendado</div>'; return; }
+  lista.innerHTML = data.map(d => `
+    <div class="schedule-item">
+      <div class="schedule-time">${d.data||'—'}</div>
+      <div class="schedule-info">
+        <div class="schedule-title">${d.titulo}</div>
+        <div class="schedule-meta">${d.versiculo||''} ${d.tag ? '· '+d.tag : ''}</div>
+      </div>
+      <div class="schedule-status">
+        <span class="tag tag-green">PUBLICADO</span>
+      </div>
+    </div>`).join('');
+}
+
+async function agendarDevocional() {
+  const titulo = document.getElementById('ag-titulo').value.trim();
+  const conteudo = document.getElementById('ag-conteudo').value.trim();
+  if (!titulo || !conteudo) { toast('Preencha título e conteúdo!', true); return; }
+  const d = document.getElementById('ag-data').value;
+  const dataFmt = d ? new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}) : '';
+  const { error } = await db.from('devocionais').insert([{
+    titulo, conteudo, data: dataFmt,
+    versiculo: document.getElementById('ag-versiculo').value.trim(),
+    tag: document.getElementById('ag-tag').value,
+    resumo: document.getElementById('ag-resumo').value.trim(),
+  }]);
+  if (error) { toast('Erro: ' + error.message, true); return; }
+  toast('Devocional agendado para ' + (dataFmt || 'hoje') + '!');
+  limpar('ag-titulo','ag-versiculo','ag-resumo','ag-conteudo');
+  document.getElementById('ag-data').value = '';
+  loadAgendamento();
+}
+
+// DELETE
+async function del(tabela, id, reload) {
+  if (!confirm('Apagar este item?')) return;
+  const { error } = await db.from(tabela).delete().eq('id', id);
+  if (error) { toast('Erro ao apagar!', true); return; }
+  toast('Apagado!');
+  reload();
+}
+
+init();
+</script>
+</body>
+</html>
